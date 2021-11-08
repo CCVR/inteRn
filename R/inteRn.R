@@ -619,12 +619,22 @@ ASCVD = function(
   return(res)
 }
 
-# Adams formula for ideal PaO2 
-Adams.ideal.PaO2 = function(
-  FiO2 = 0.21
+# 'Mellengard-Sorbini Ideal PaO2' 
+Ideal.Pao2 = function(
+  age = 60
 )
 {
-  res = 104 - (0.8 * FiO2 * 100)
+  # supine
+  supine = 104 - (0.42*age)
+  
+  # seated
+  seated = 104 - (0.27*age)
+  
+  # list res
+  res = list(
+    'Ideal PaO2 when seated' = seated, 
+    'Ideal PaO2 when supine' = supine
+  )
   return(res)
 }
 
@@ -685,6 +695,7 @@ fs=list(
   
   # 'Atherosclerotic Cardiovascular Disease' = ASCVD, 
   # quick estimate of aPO2 = qeoPo2
+  'Mellengard-Sorbini Ideal PaO2' = Ideal.Pao2,
   'Serum Osmolarity from BMP' = serum.osmolarity,
   'Fraction of Excreted urea' = FEurea,
   'Corrected QT interval' = QTc,
