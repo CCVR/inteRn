@@ -3,8 +3,10 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 %%  ~~function to do ... ~~
+Anion Gap
 }
 \description{
+Calculate the anion gap
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
@@ -14,21 +16,26 @@ anion.gap(chloride = 100, sodium = 140, bicarbonate = 24, albumin = 4)
 \arguments{
   \item{chloride}{
 %%     ~~Describe \code{chloride} here~~
+Numerical value. Chloride in blood.
 }
   \item{sodium}{
 %%     ~~Describe \code{sodium} here~~
+Numerical value. Sodium in blood.
 }
   \item{bicarbonate}{
 %%     ~~Describe \code{bicarbonate} here~~
+Numerical value. Bicarbonate in blood.
 }
   \item{albumin}{
 %%     ~~Describe \code{albumin} here~~
+Numerical value. Albumin in blood.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
+Returns a list object with the anion gap calculation results.
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
@@ -39,6 +46,7 @@ anion.gap(chloride = 100, sodium = 140, bicarbonate = 24, albumin = 4)
 %% ~put references to the literature/web site here ~
 }
 \author{
+Carlos C Vera Recio
 %%  ~~who you are~~
 }
 \note{
@@ -51,26 +59,7 @@ anion.gap(chloride = 100, sodium = 140, bicarbonate = 24, albumin = 4)
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (chloride = 100, sodium = 140, bicarbonate = 24, albumin = 4) 
-{
-    anion.gap = sodium - (chloride + bicarbonate)
-    anion.gap.albumin.corrected = anion.gap + (2.5 * (4 - albumin))
-    delta.gap = anion.gap - 12
-    albumin.corrected.delta.gap = anion.gap.albumin.corrected - 
-        12
-    delta.ratio = delta.gap/(24 - bicarbonate)
-    delta.ratio.albumin.corrected = albumin.corrected.delta.gap/(24 - 
-        bicarbonate)
-    res = list(`Anion Gap` = anion.gap, `Albumin Corrected Anion Gap` = anion.gap.albumin.corrected, 
-        `Delta Gap` = delta.gap, `Albumin Corrected Delta Gap` = albumin.corrected.delta.gap, 
-        `Delta Ratio` = delta.ratio, `Albumin Corrected Delta Ratio` = delta.ratio.albumin.corrected)
-    return(res)
-  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
