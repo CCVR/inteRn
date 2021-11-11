@@ -848,6 +848,15 @@ acls.easy = function(
   stable = TRUE
 )
 {
+  # medication doses in ACLS
+  dosing = list(
+    'epinephrine' = '1 mg IV, can increase to 1 mg',
+    'Amiodarone' = '300 mg IV for first dose, continue with 150 mg subsequent doses',
+    'Adenosine' = '6 mg IV. Can increase to 12 mg',
+    'Atropine' = '1 mg IV (initial), max dose 3 mg',
+    'Beta Blocker (propanolol)' = '1-3mg IV',
+    'Calcium Channel Blocker (Diltiazem)' = '20m mg IV, 25 mg IV max'
+  )
   if(pulse)
   {
     if((rhythm == 'normal sinus rhythm' | rhythm == 'sinus tach'))
@@ -885,7 +894,11 @@ acls.easy = function(
   {
     warning('Please input a valid value for pulse. It can be either TRUE or FALSE')
   }
-  return(action)
+  res = list(
+    'suggested action' = action,
+    'Medication doses' = dosing
+  )
+  return(res)
 }
 
 # 'Wells Criteria for PE' = Wells.pe,
