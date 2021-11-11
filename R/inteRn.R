@@ -217,10 +217,19 @@ Glasgow = function(
     }else
     {
         best.verbal.response=1
-      }
+    }
   }
-  glasgow.score = as.integer(best.verbal.response)+as.integer(best.eye.response)+as.integer(best.motor.response)
-  cat('Glasgow comma scale for this patient is estimated to be :', glasgow.score);cat('', sep = '\n')
+  if(mechanical.ventilation)
+  {
+    glasgow.score = 1+as.integer(best.eye.response)+as.integer(best.motor.response)
+  }else if(!(mechanical.ventilation))
+  {
+    glasgow.score = as.integer(best.verbal.response)+as.integer(best.eye.response)+as.integer(best.motor.response)
+  }
+  cat('Glasgow comma scale for this patient is estimated to be :', glasgow.score)
+  cat('', sep = '\n');cat('', sep = '\n')
+  cat('The maximum score in the Glasgow comma scale is 15. The maximum score for patients in mechanical ventilation is 11.', sep = '\n')
+  cat('', sep = '\n')
   return(glasgow.score)
 }
 # Glasgow()
@@ -650,12 +659,241 @@ serum.osmolarity = function(
   return(res)
 }
 
+# Anion gap
+anion.gap = function(
+  chloride=100, # mmol/L
+  sodium = 140, # mmol/L
+  bicarbonate = 24, # mmol/L
+  albumin = 4 # g/dL
+)
+{
+  # anion gap
+  anion.gap = sodium - (chloride + bicarbonate)
+  
+  # Albumin corrected anion gap
+  anion.gap.albumin.corrected = anion.gap + (2.5 * (4 - albumin))
+  
+  # Delta gap
+  delta.gap = anion.gap - 12
+  
+  # albumin corrected delta gap
+  albumin.corrected.delta.gap = anion.gap.albumin.corrected - 12
+  
+  # delta ration
+  delta.ratio = delta.gap / (24 - bicarbonate)
+  
+  # Albumin corrected delta ratio
+  delta.ratio.albumin.corrected = albumin.corrected.delta.gap / (24 - bicarbonate)
+  
+  # res
+  res = list(
+    'Anion Gap' = anion.gap,
+    'Albumin Corrected Anion Gap' = anion.gap.albumin.corrected,
+    'Delta Gap' = delta.gap,
+    'Albumin Corrected Delta Gap' = albumin.corrected.delta.gap,
+    'Delta Ratio' = delta.ratio,
+    'Albumin Corrected Delta Ratio' = delta.ratio.albumin.corrected
+  )
+  return(res)
+}
+
+# 'SIRS, Sepsis and septic shock' = SIRS.Sepsis.SepticShock,
+SIRS.Sepsis.Septic = function(
+  HR = 90,
+  RR = 20,
+  temp = 38,
+  PaCO2 = 32,
+  WBC = 12000,
+  percent.band.neutrofils = 10,
+  source.of.infection = 'present', # suspected, absent
+  lactic.acidosis = FALSE,
+  sbp = 90,
+  sbp.drop = 40,
+  fluid.resuciation = FALSE,
+  multi.organ.failure = FALSE
+)
+{
+  sirs.score = 0
+  if(temp > 38 | temp < 36)
+  {
+    sirs.score = sirs.score + 1
+  }
+  if(HR > 90)
+  {
+    sirs.score = sirs.score + 1
+  }
+  if(RR > 20 | PaCO2 < 32)
+  {
+    sirs.score = sirs.score + 1
+  }
+  if(WBC > 12000 | WBC < 4000 | percent.band.neutrofils > 10)
+  {
+    sirs.score = sirs.score + 1
+  }
+  if(sirs.score > 1)
+  {
+    sirs = TRUE
+  }else
+  {
+    sirs = FALSE
+  }
+  
+  # sepsis
+  if(sirs & (source.of.infection == 'present' | source.of.infection == 'suspected'))
+  {
+    sepsis = TRUE
+  }else
+  {
+    sepsis = FALSE
+  }
+  
+  # severe sepsis
+  if(sepsis & (sbp < 90 | sbp.drop >= 40 | lactic.acidosis) )
+  {
+    severe.sepsis = TRUE
+  }else
+  {
+    severe.sepsis = FALSE
+  }
+  
+  # septic shock
+  if(severe.sepsis & fluid.resuciation)
+  {
+    septic.shock = TRUE
+  }else
+  {
+    septic.shock = FALSE
+  }
+  
+  # Multi organ dysfunction syndrome
+  if(septic.shock & multi.organ.failure)
+  {
+    multi.organ.dysfunction.syndrome = TRUE
+  }else
+  {
+    multi.organ.dysfunction.syndrome = FALSE
+  }
+  criteria = list(
+    'The patient meets criteria for SIRS' = sirs,
+    'The patient meets criteria for sepsis' = sepsis,
+    'The patient meets criteria for severe sepsis' = severe.sepsis,
+    'The patient meets criteria for septic shock' = septic.shock,
+    'The patient meets criteria for multi organ dysfunction syndrome' = multi.organ.dysfunction.syndrome
+  )
+  # res = list(
+  #   'criteria meet' = names(ccvr[unlist(ccvr)]),
+  #   'results for all criteria' = criteria
+  # )
+  if( !(sirs & sepsis & severe.sepsis & septic.shock & multi.organ.dysfunction.syndrome) )
+  {
+    res = 'The patient does not meet any criteria'
+  }else
+  {
+    res = names(criteria[unlist(criteria)])
+  }
+  return(res)
+}
+
+# Winter's Formula
+Winters.Formula = function(
+  bicarb = 24
+)
+{
+  Expected.pCO2 = c(
+    lower.bound = 1.5 * bicarb + 8 - 2,
+    upper.bound = 1.5 * bicarb + 8 + 2
+  )
+  return(Expected.pCO2)
+}
+
+# Free water deficit (divide by 24 for rate of 0.45%)
+# (divide by 4 for rate of tap water every six hours)
+free.water.deficit = function(
+  weight = 50, # kilograms
+  current.sodium = 152,
+  ideal.sodium = 140, 
+  sex = 'male',
+  age = 40
+)
+{
+  # get total body water
+  if(age < 18)
+  {
+    total.body.water=0.60
+  }else if(sex == 'male' | age < 65)
+  {
+    total.body.water=0.60
+  }else if(sex=='male' | age >= 65)
+  {
+    total.body.water=0.5
+  }else if(sex == 'female' | age <65)
+  {
+    total.body.water=0.5
+  }else if(sex == 'female' | age >= 65)
+  {
+    total.body.water=0.45
+  }
+  
+  # free water deficit
+  free.water.deficit = total.body.water*weight*(current.sodium / ideal.sodium - 1)
+  cat('Free water deficit in Liters: ', free.water.deficit);cat('', sep = '\n')
+  return(free.water.deficit)
+}
+
+# ACLS easy
+acls.easy = function(
+  pulse=TRUE,
+  rhythm = 'normal sinus rhythm', # 'afib/flutter', 'vtach/vfib', 'sinus tach', 'svt'
+  symptoms = TRUE,
+  stable = TRUE
+)
+{
+  if(pulse)
+  {
+    if((rhythm == 'normal sinus rhythm' | rhythm == 'sinus tach'))
+    {
+      action='Do nothing'
+    }else if( (rhythm != 'normal sinus rhythm' & rhythm  != 'sinus tach') & !(symptoms) )
+    {
+      action='O2, IVF, Monitor'
+    }else if( (rhythm != 'normal sinus rhythm' & rhythm  != 'sinus tach') & symptoms)
+    {
+      if(stable)
+      {
+        if(rhythm == 'afib/flutter')
+        {
+          action='Use drugs: No CHF: Beta Blocker or Calcium Channel Blocker | CHF: Amiodarone, Digoxin'
+        }else
+        {
+          action='Use drugs: Fast & Narrow = Adenosine | Fast & Wide = Amiodarone | Slow = Atropine & prepare to pace ||| After 3 doses consider CCB or Beta Blockers'
+        }
+      }else if(!(stable))
+      {
+        action='Use electricity: Shock Fast Rhythm (synchronized cardioversion) | Pace Slow Rhythm'
+      }
+    }
+  }else if(!(pulse))
+  {
+    if(rhythm == 'vtach/vfib')
+    {
+      action='CPR for 2 minutes > pulse check, rhythm check, shock > Epinephrine > CPR for 2 minutes > pulse check, rhythm check, shock > Amiodarone'
+    }else
+    {
+      action='CPR for 2 minutes > pulse check, rhythm check, shock > Epinephrine > CPR for 2 minutes > pulse check, rhythm check, shock > Absent'
+    }
+  }else
+  {
+    warning('Please input a valid value for pulse. It can be either TRUE or FALSE')
+  }
+  return(action)
+}
+
+# 'Wells Criteria for PE' = Wells.pe,
+# 'Wells Criteria for DVT' = Wells.dvt,
+
 # 'MELD score' = meld.score,
 # 'HAS-BLED' = has.bled,
 # 'HEART' = heart.score,
-# 'SIRS, Sepsis and septic shock' = SIRS.Sepsis.SepticShock,
-# 'Wells Criteria for PE' = Wells.pe,
-# 'Wells Criteria for DVT' = Wells.dvt,
 # 'Centor Score for Strep Pharyngitis' = Centor.Strep,
 # 'Child-Pugh' = Child.Pugh,
 # 'Corrected QT Interval' = QTc,
@@ -678,23 +916,18 @@ fs=list(
   # 'MELD score' = meld.score,
   # 'HAS-BLED' = has.bled,
   # 'HEART' = heart.score,
-  # 'SIRS, Sepsis and septic shock' = SIRS.Sepsis.SepticShock,
-  # 'Wells Criteria for PE' = Wells.pe,
-  # 'Wells Criteria for DVT' = Wells.dvt,
   # 'Centor Score for Strep Pharyngitis' = Centor.Strep,
   # 'Child-Pugh' = Child.Pugh,
-  # 'Corrected QT Interval' = QTc,
   # 'PERC rule for PE' = PERC.pe,
   # 'Absolute Neutrophil count' = ANC,
   # 'Revised Cardiac Risk index - Preoperative' = revised.cardiac.risk,
   # 'NIH Stroke Scale' = NIHSS,
   # 'CIWA score for alcohol withdrawal' = ciwar
-  # Wells
   # NYHA
   # ASCVD
-  
   # 'Atherosclerotic Cardiovascular Disease' = ASCVD, 
-  # quick estimate of aPO2 = qeoPo2
+  
+  # free water deficit
   'Mellengard-Sorbini Ideal PaO2' = Ideal.Pao2,
   'Serum Osmolarity from BMP' = serum.osmolarity,
   'Fraction of Excreted urea' = FEurea,
@@ -711,7 +944,10 @@ fs=list(
   "Mean arterial pressure" = map.calc,
   'CHADS-VASc' = CHADSVASc,
   "Glasgow Comma Scale" = Glasgow,
-  'ICH score' = ich.score
+  'ICH score' = ich.score,
+  'Winters Formula' = Winters.Formula,
+  'Anion Gap' = anion.gap,
+  'ACLS' = acls.easy
 )
 
 # GUI function

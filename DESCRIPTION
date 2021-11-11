@@ -1,9 +1,9 @@
 Package: inteRn
 Type: Package
-Title: Helps calculate every day scores used in internal medicine
+Title: What the package does (short line)
 Version: 1.0
-Date: 2021-11-04
-Author: Carlos C Vera Recio
-Maintainer: Carlos C Vera Recio <carlos.verarecio@gmail.com>
-Description: This package is a compilation of the most frequently used scores and equations needed for PGY1 residents in Internal Medicine. A few examples are the CHADS-VASC score for need of anti-coagulation in a patient with A-Fib, the creatinine clearance to adjust medication doses for renal function and corrections for sodium (hyperglycemia), calcium (albumin) and QT interval (QTc).
-License: GPL-2
+Date: 2021-11-08
+Author: Who wrote it
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
