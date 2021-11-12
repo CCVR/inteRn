@@ -850,12 +850,46 @@ acls.easy = function(
 {
   # medication doses in ACLS
   dosing = list(
-    'epinephrine' = '1 mg IV, can increase to 1 mg',
+    'epinephrine' = '1 mg IV, can increase to 2 mg',
     'Amiodarone' = '300 mg IV for first dose, continue with 150 mg subsequent doses',
     'Adenosine' = '6 mg IV. Can increase to 12 mg',
     'Atropine' = '1 mg IV (initial), max dose 3 mg',
     'Beta Blocker (propanolol)' = '1-3mg IV',
     'Calcium Channel Blocker (Diltiazem)' = '20m mg IV, 25 mg IV max'
+  )
+  dosing.table = data.frame(
+    medication = c(
+      'epinephrine', 
+      'amiodarone', 
+      'adenosine',
+      'atropine',
+      'beta-blocker',
+      'calcium-channel-blocker'
+    ), 
+    route = c(
+      'IV', 
+      'IV', 
+      'IV',
+      'IV',
+      'IV',
+      'IV'
+    ), 
+    initial.dose = c(
+      '1 mg', 
+      '300 mg', 
+      '6 mg',
+      '1 mg',
+      '1 mg',
+      '20 mg'
+    ),
+    max.dose = c(
+      '2 mg', 
+      '150-300 mg', 
+      '12 mg',
+      '3 mg',
+      '3 mg',
+      '25 mg'
+    )
   )
   if(pulse)
   {
