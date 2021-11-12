@@ -930,7 +930,8 @@ acls.easy = function(
   }
   res = list(
     'suggested action' = action,
-    'Medication doses' = dosing
+    'Medication doses' = dosing,
+    'Dosing table' = dosing.table
   )
   return(res)
 }
