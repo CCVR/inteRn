@@ -1,46 +1,41 @@
-\name{anion.gap}
-\alias{anion.gap}
+\name{urine.anion.gap}
+\alias{urine.anion.gap}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 %%  ~~function to do ... ~~
-Anion Gap
+Urine Anion Gap
 }
 \description{
-Calculate the anion gap
+Calculate the urine anion gap to help diagnose metabolic acidosis
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-anion.gap(
-  chloride = 100,
-  sodium = 140, 
-  bicarbonate = 24, 
-  albumin = 4
+urine.anion.gap(
+  urine.sodium = 10,
+  urine.potassium = 10, 
+  urine.chloride = 20
 )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{chloride}{
-%%     ~~Describe \code{chloride} here~~
-Numerical value. Chloride in blood.
+  \item{urine.sodium}{
+  Numerical value corresponding to the sodium measured in urine spots.
+%%     ~~Describe \code{urine.sodium} here~~
 }
-  \item{sodium}{
-%%     ~~Describe \code{sodium} here~~
-Numerical value. Sodium in blood.
+  \item{urine.potassium}{
+%%     ~~Describe \code{urine.potassium} here~~
+Numerical value corresponding to the potassium measured in urine spots.
 }
-  \item{bicarbonate}{
-%%     ~~Describe \code{bicarbonate} here~~
-Numerical value. Bicarbonate in blood.
-}
-  \item{albumin}{
-%%     ~~Describe \code{albumin} here~~
-Numerical value. Albumin in blood.
+  \item{urine.chloride}{
+%%     ~~Describe \code{urine.chloride} here~~
+Numerical value corresponding to the chlorie measured in urine spots.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-Returns a list object with the anion gap calculation results.
+Returns a list object that includes the estimated urine anion gap and an interpretation.
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
@@ -51,8 +46,8 @@ Returns a list object with the anion gap calculation results.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Carlos C Vera Recio
 %%  ~~who you are~~
+Carlos C Vera Recio
 }
 \note{
 %%  ~~further notes~~

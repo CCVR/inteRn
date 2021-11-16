@@ -936,6 +936,246 @@ acls.easy = function(
   return(res)
 }
 
+# Harris Benedict Equation for BMR
+Harris.Benedict = function(
+  height = 62,
+  age = 28, 
+  weight = 154,
+  weight.goal = 140,
+  dia = c(1,2,3,4,5),
+  calorias = c(805, 720, 1210, 1000, 759),
+  Make.Plot = TRUE,
+  sex='female'
+)
+{
+  # fix weight
+  weight.kg = weight/2.2
+  weight.kg.goal = weight.goal/2.2
+  height.cm = height/2.54
+  
+  
+  if(sex=='female') # HB for females
+  {
+    kcal = 655.0955 + 9.5634 * weight.kg + 1.8496 * height.cm - 4.6756 * age
+    kcal.goal = 655.0955 + 9.5634 * weight.kg.goal + 1.8496 * height.cm - 4.6756 * age
+    conservative.diet.lb = kcal.goal - 250
+    conservative.diet.up = kcal - 250
+  } else if(sex=='male') # HB for males
+  {
+    # Men: BMR = 66.4730 + (13.7516 x weight in kg) + (5.0033 x height in cm) – (6.7550 x age in years)
+    kcal = 66.4730 + 13.7516 * weight.kg + 5.0033 * height.cm - 6.7550 * age
+    kcal.goal = 66.4730 + 13.7516 * weight.kg.goal + 5.0033 * height.cm - 6.7550 * age
+    conservative.diet.lb = kcal.goal - 250
+    conservative.diet.up = kcal - 250
+  }
+  
+  
+  # result's list
+  res = list(
+    'kcal' = kcal,
+    'kcal goal' = kcal.goal,
+    'Conservative diet per day' = conservative.diet.lb,
+    'Conservative diet per day - Max' = conservative.diet.up
+  )
+  
+  if(Make.Plot)
+  {
+    # show plot
+    plot(
+      x = dia,
+      y = calorias,
+      ylim = c(500, 1500),
+      col='red'
+    )
+    abline( h=res$kcal, col = 'blue' )
+    abline( h=res$`kcal goal`, col = 'black' )
+    abline( h=res$`Conservative diet per day`, col = 'green' )
+    abline( h=res$`Conservative diet per day - Max`, col = 'yellow' )
+    p=recordPlot()
+    
+    # return object
+    diet = list(
+      'calories' = res,
+      'plot' = p 
+    )
+  }else
+  {
+    # return object
+    diet = list(
+      'calories' = res
+    )
+  }
+  return(diet)
+}
+
+# urine anion gap
+urine.anion.gap = function(
+  urine.sodium = 10,
+  urine.potassium = 10,
+  urine.chloride=20
+)
+{
+  u.a.g = urine.sodium + urine.potassium - urine.chloride
+  if(u.a.g > 10)
+  {
+    interpretation = 'positive anion gap suggestive of etiologies such as renal tubular acidosis or renal failure'
+  }else if(u.a.g < 10)
+  {
+    interpretation = 'negative anion gap suggestive of etiologies such as diarrhea, proximal renal tubular acidosis, acetazolamide or ureteral division'
+  }else if(u.a.g > 0 & u.a.g <= 10)
+  {
+    interpretation = 'positive urine anion gap'
+  }else if(u.a.g < 0 & u.a.g >= -10)
+  {
+    interpretation = 'negative urine anion gap'
+  }else
+  {
+    warning('anion gap did not calculate to anything that makes sense')
+  }
+  res = list(
+    'interpretation' = interpretation,
+    'urine anion gap' = u.a.g
+  )
+  return(res)
+}
+
+# diagnose acidosis
+acidosis = function(
+  serum.pH = 7.4,
+  ABG.pCO2 = 40,
+  serum.sodium=140, 
+  serum.chloride=100, 
+  serum.bicarb=24,
+  serum.BUN=8, 
+  serum.glucose=100, 
+  serum.ethanol=0,
+  urine.sodium=1, 
+  urine.potassium=1, 
+  urine.chloride=1,
+  urine.pH=5,
+  measured.urine.osm=1,
+  serum.albumin=1,
+  poison.concern = FALSE
+)
+{
+  if(serum.pH < 7.37 & ABG.pCO2 < 40)
+  {
+    resp.compensation = inteRn::Winters.Formula(bicarb = serum.bicarb)
+    compensation = ifelse(
+      ABG.pCO2 >= resp.compensation[1] & ABG.pCO2 <= resp.compensation[2],
+      TRUE,
+      FALSE
+    )
+    if(compensation)
+    {
+      if(ABG.pCO2 < resp.compensation[1])
+      {
+        combined = 'metabolic acidosis + respiratory alkalosis'
+      }else if(ABG.pCO2 > resp.compensation[2])
+      {
+        combined = 'metabolic acidosis + respiratory acidosis'
+      }else
+      {
+        combined = 'no'
+      }
+    }else if(!compensation)
+    {
+      combined = 'no'
+    }else
+    {
+      warning('Oh, oh. There is some issue. Repiratory compensation should be true or false. Please re-check your inputs.')
+      combined = 'no'
+    }
+    anion.gap.obj = inteRn::anion.gap(
+      chloride = serum.chloride,
+      sodium = serum.sodium, 
+      bicarbonate = serum.bicarb, 
+      albumin = serum.albumin
+    )
+    serum.anion.gap = anion.gap.obj$`Albumin Corrected Anion Gap`
+    if(serum.anion.gap <= 12)
+    {
+      anion.gap.acidosis = 'non anion gap acidosis'
+      urine.anion.gap.obj = inteRn::urine.anion.gap(
+        urine.sodium = urine.sodium,
+        urine.potassium = urine.potassium,
+        urine.chloride = urine.chloride
+      )
+      urine.anion.gap.result = urine.anion.gap.obj$`urine anion gap`
+      interpretation = urine.anion.gap.obj$interpretation
+      diagnosis = list(
+        'combined respiratory and metabolic' = combined,
+        'interpretation' = interpretation, 
+        'compensation'= compensation
+      )
+    }else if(serum.anion.gap > 12 )
+    {
+      anion.gap.acidosis = 'elevated anion gap acidosis'
+      if(poison.concern)
+      {
+        interpretation = 'determine measured serum osm - calculated serum osm. If > 20, consider methanol, ethanol or glycol poisoning. If < 20, consider salicylates, oxyproline, acetaminophen.'
+        diagnosis = list(
+          'combined respiratory and metabolic' = combined,
+          'interpretation' = interpretation, 
+          'compensation'= compensation
+        )
+      }else if(!poison.concern)
+      {
+        deltadelta = anion.gap.obj$`Albumin Corrected Delta Ratio`
+        if(deltadelta > 1.2)
+        {
+          # acidosis + metabolic alkalosis
+          interpretation = 'Acidosis + additional metabolic alkalosis. Lactic acidosis, DKA, Renal Failure, Ingestion of ASA, Acetaminophen, Methanol, Glycol, Oxyproline.'
+          diagnosis = list(
+            'combined respiratory and metabolic' = combined,
+            'interpretation' = interpretation, 
+            'compensation'= compensation
+          )
+        }else if(deltadelta >= 0.8 & deltadelta <= 1.2)
+        {
+          # acidosis only
+          interpretation = 'Acidosis only. Lactic acidosis, DKA, Renal Failure, Ingestion of ASA, Acetaminophen, Methanol, Glycol, Oxyproline.'
+          diagnosis = list(
+            'combined respiratory and metabolic' = combined,
+            'interpretation' = interpretation, 
+            'compensation'= compensation
+          )
+        }else if(deltadelta < 0.8)
+        {
+          # acidosis + additional non-AG acidosis
+          interpretation = 'Acidosis + additional non anion gap acidosis.  Lactic acidosis, DKA, Renal Failure, Ingestion of ASA, Acetaminophen, Methanol, Glycol, Oxyproline.'
+          diagnosis = list(
+            'combined respiratory and metabolic' = combined,
+            'interpretation' = interpretation, 
+            'compensation'= compensation
+          )
+        }else
+        {
+          
+        }
+      }
+    }else
+    {
+      warning('anion gap should be normal or abnormal. Re-check your inputs please')
+    }
+    
+  }else if(serum.pH < 7.37 & ABG.pCO2 >= 40)
+  {
+    diagnosis = 'respiratory acidosis'
+  }else if(serum.pH < 7.4 & serum.pH >= 7.37)
+  {
+    diagnosis = 'non specific acidosis'
+  }else if(serum.pH >= 7.4)
+  {
+    diagnosis = 'not an acidosis'
+  }else
+  {
+    warning('there was an error with the pH or pCO2 inputs')
+  }
+  return(diagnosis)
+}
+
+
 # 'Wells Criteria for PE' = Wells.pe,
 # 'Wells Criteria for DVT' = Wells.dvt,
 
@@ -995,7 +1235,9 @@ fs=list(
   'ICH score' = ich.score,
   'Winters Formula' = Winters.Formula,
   'Anion Gap' = anion.gap,
-  'ACLS' = acls.easy
+  'ACLS' = acls.easy,
+  'Harris Benedict' = Harris.Benedict,
+  'Acidosis Algorithm' = acidosis
 )
 
 # GUI function
